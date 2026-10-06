@@ -1,0 +1,179 @@
+# ============================================================
+# .gitignore - Pothole Detection DWDM Project
+# ============================================================
+
+# ────────────────────────────────────────────────────────────
+# Python
+# ────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+*.pyd
+.Python
+build/
+dist/
+*.egg-info/
+*.egg
+.eggs/
+pip-wheel-metadata/
+MANIFEST
+
+# ────────────────────────────────────────────────────────────
+# Virtual Environments
+# ────────────────────────────────────────────────────────────
+venv/
+env/
+.venv/
+ENV/
+env.bak/
+venv.bak/
+
+# ────────────────────────────────────────────────────────────
+# Secrets & Credentials — NEVER commit these
+# ────────────────────────────────────────────────────────────
+.env
+.env.*
+*.env
+secrets.py
+secrets.json
+secrets.yaml
+secrets.yml
+credentials.json
+credentials.yaml
+api_keys.txt
+api_keys.json
+passwords.txt
+*password*
+*secret*
+*token*
+*.pem
+*.key
+*.p12
+*.pfx
+config_local.yaml
+config_local.yml
+
+# ────────────────────────────────────────────────────────────
+# Large Dataset — data/ directory contains 559 MB
+# The processed/raw/outputs/demo subdirs hold large generated
+# files not suitable for GitHub. Only keep gitkeep markers.
+# ────────────────────────────────────────────────────────────
+data/raw/
+data/processed/
+data/outputs/
+data/demo/
+!data/raw/.gitkeep
+!data/outputs/.gitkeep
+!data/demo/.gitkeep
+!data/processed/.gitkeep
+
+# ────────────────────────────────────────────────────────────
+# RDD2022 Dataset — images are 8.37 MB (120 images, OK)
+# but exclude to be safe; user can pull dataset separately.
+# Include labels + gitkeep to preserve structure.
+# (Remove dataset/ lines below if you want to commit images)
+# ────────────────────────────────────────────────────────────
+dataset/rdd2022/India/train/images/
+!dataset/rdd2022/India/train/images/.gitkeep
+# Labels are tiny (0.01 MB) — they WILL be committed
+# dataset/rdd2022/India/train/labels/  <-- NOT ignored (tiny)
+!dataset/rdd2022/.gitkeep
+
+# ────────────────────────────────────────────────────────────
+# Model weights — Large binary files
+# best.pt and pothole_yolo.pt are ~23.3 MB each.
+# GitHub recommends Git LFS for files > 50 MB, but even
+# smaller .pt files bloat the repo history badly.
+# Use Git LFS or host on HuggingFace/Google Drive.
+# ────────────────────────────────────────────────────────────
+*.pt
+*.pth
+*.onnx
+*.tflite
+*.torchscript
+!models/README.md
+!models/model_card.json
+
+# ────────────────────────────────────────────────────────────
+# YOLO / Training runs — generated output, not source
+# ────────────────────────────────────────────────────────────
+runs/
+*.weights
+*.cfg.bak
+
+# ────────────────────────────────────────────────────────────
+# Databases — generated files
+# ────────────────────────────────────────────────────────────
+*.db
+*.sqlite
+*.sqlite3
+
+# ────────────────────────────────────────────────────────────
+# Logs
+# ────────────────────────────────────────────────────────────
+logs/
+*.log
+*.log.*
+
+# ────────────────────────────────────────────────────────────
+# Streamlit cache & secrets
+# ────────────────────────────────────────────────────────────
+.streamlit/secrets.toml
+# Keep .streamlit/config.toml (non-secret, configures theme/port)
+
+# ────────────────────────────────────────────────────────────
+# Pytest / Testing
+# ────────────────────────────────────────────────────────────
+.pytest_cache/
+.coverage
+htmlcov/
+.tox/
+*.cover
+coverage.xml
+nosetests.xml
+pytest.xml
+
+# ────────────────────────────────────────────────────────────
+# Jupyter / IPython
+# ────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+*.ipynb
+
+# ────────────────────────────────────────────────────────────
+# IDE & Editor
+# ────────────────────────────────────────────────────────────
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.settings/
+
+# ────────────────────────────────────────────────────────────
+# Operating System
+# ────────────────────────────────────────────────────────────
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+$RECYCLE.BIN/
+
+# ────────────────────────────────────────────────────────────
+# Temporary / misc
+# ────────────────────────────────────────────────────────────
+*.tmp
+*.temp
+*.bak
+*.orig
+*.swp
+*.pid
+*.seed
+*.pid.lock
+tmp/
+temp/

@@ -1,0 +1,31 @@
+{
+  "model_name": "YOLOv8n-RDD2022-D40-Real",
+  "architecture": "YOLOv8n",
+  "type": "REAL_TRAINED_MODEL",
+  "note": "Trained on RDD2022 D40 (Pothole) dataset -- real weights, NOT demo",
+  "classes": {
+    "0": "D40_Pothole"
+  },
+  "class_mapping": "0 = D40 Pothole (RDD2022)",
+  "dataset": "C:\\Users\\kakum\\Downloads\\project_pathhole_fixed\\data\\processed\\split\\dataset.yaml",
+  "input_size": [
+    416,
+    416,
+    3
+  ],
+  "epochs_completed": 3,
+  "batch_size": 4,
+  "device": "cpu",
+  "confidence_default": 0.25,
+  "iou_default": 0.45,
+  "created_at": "2026-10-05T14:47:32.774172",
+  "metrics": {
+    "mAP50": 0.2308,
+    "mAP50_95": 0.1277,
+    "precision": 0.4557,
+    "recall": 0.1992,
+    "epochs_completed": 3,
+    "evaluated_split": "test",
+    "last_evaluated": "2026-10-05T15:05:25.255869"
+  }
+}
