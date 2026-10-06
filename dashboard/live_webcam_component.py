@@ -379,8 +379,16 @@ def render_live_webcam_html(
       showDiag(
         "⚠️ <strong>Insecure Context Detected:</strong> WebRTC camera access requires HTTPS or localhost.<br>" +
         "You are accessing from <code>" + window.location.origin + "</code>. " +
-        "Please open <a href='http://localhost:8501' target='_blank' style='color:#60a5fa;'>http://localhost:8501</a> in your browser.",
+        "Please open the website via HTTPS to enable webcam streaming.",
         "warn"
+      );
+      return false;
+    }}
+    if (window.location.protocol === "https:" && API_URL.startsWith("http://") && !API_URL.includes("localhost") && !API_URL.includes("127.0.0.1")) {{
+      showDiag(
+        "⚠️ <strong>Mixed Content Warning:</strong> The site is running on HTTPS, but the YOLO API is HTTP (<code>" + API_URL + "</code>).<br>" +
+        "Browsers block HTTP requests from HTTPS sites. Please configure an HTTPS backend URL (e.g. https://...)",
+        "error"
       );
       return false;
     }}
@@ -536,7 +544,8 @@ def render_live_webcam_html(
       const conf = parseFloat(confRange.value);
 
       const tStart = performance.now();
-      const res = await fetch(API_URL + "/api/detect", {{
+      const baseUrl = (API_URL === "/" || !API_URL) ? "" : (API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL);
+      const res = await fetch(baseUrl + "/api/detect", {{
         method: "POST",
         headers: {{ "Content-Type": "application/json" }},
         body: JSON.stringify({{ image: dataUrl, conf: conf }})
@@ -634,7 +643,8 @@ def render_live_webcam_html(
     btnSave.innerText = "Saving...";
 
     try {{
-      const res = await fetch(API_URL + "/api/save", {{
+      const baseUrl = (API_URL === "/" || !API_URL) ? "" : (API_URL.endsWith('/') ? API_URL.slice(0, -1) : API_URL);
+      const res = await fetch(baseUrl + "/api/save", {{
         method: "POST",
         headers: {{ "Content-Type": "application/json" }},
         body: JSON.stringify({{

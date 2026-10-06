@@ -707,24 +707,48 @@ def page_live_detection():
         _live_server_ok = False
 
     # Quick ping to confirm server is actually responding
+    # Resolve live API URL (Streamlit secrets, environment variable, or local fallback)
+    def _resolve_live_api_urls() -> tuple:
+        # Returns (internal_ping_url, browser_client_url)
+        target_url = ""
+        try:
+            if "LIVE_API_URL" in st.secrets and str(st.secrets["LIVE_API_URL"]).strip():
+                target_url = str(st.secrets["LIVE_API_URL"]).strip().rstrip("/")
+        except Exception:
+            pass
+        if not target_url:
+            target_url = os.environ.get("LIVE_API_URL", "").strip().rstrip("/")
+
+        if target_url in ("", "/"):
+            # Behind reverse proxy (e.g. Docker / Nginx on Hugging Face / Render)
+            if os.environ.get("LIVE_API_URL") == "/":
+                return ("http://127.0.0.1:8502", "")
+            return ("http://127.0.0.1:8502", "http://127.0.0.1:8502")
+
+        return (target_url, target_url)
+
+    internal_api_url, browser_api_url = _resolve_live_api_urls()
+
     try:
         import urllib.request as _ur
-        _ur.urlopen("http://127.0.0.1:8502/api/health", timeout=1.5)
+        _ur.urlopen(f"{internal_api_url}/api/health", timeout=2.5)
         _live_server_ok = True
     except Exception:
         _live_server_ok = False
 
+    display_url = browser_api_url if browser_api_url else "(Same-Origin Gateway)"
     if _live_server_ok:
         st.success(
-            "✅ **YOLO Live Inference Server ACTIVE** — `models/best.pt` loaded on `http://127.0.0.1:8502`. "
+            f"✅ **YOLO Live Inference Server ACTIVE** — `models/best.pt` connected on `{display_url}`. "
             "Real RDD2022 D40 Pothole detections are ready.",
             icon="✅",
         )
     else:
         st.error(
-            "❌ **YOLO Inference Server not reachable** on `http://127.0.0.1:8502`.  \n"
-            "Start it manually in a separate terminal:  \n"
-            "```\npython ml/live_server.py\n```"
+            f"❌ **YOLO Inference Server not reachable** on `{internal_api_url}`.  \n"
+            "If running locally, start it in a separate terminal:  \n"
+            "```\npython ml/live_server.py\n```  \n"
+            "If running on cloud, configure `LIVE_API_URL = \"https://<your-backend-url>\"` in Streamlit secrets."
         )
 
     # \u2500\u2500 Three tabs \u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500\u2500
@@ -749,7 +773,7 @@ def page_live_detection():
         from dashboard.live_webcam_component import render_live_webcam_html
 
         html_code = render_live_webcam_html(
-            api_url="http://127.0.0.1:8502",
+            api_url=browser_api_url,
             default_conf=0.20,
             city=live_city,
             area=live_area,

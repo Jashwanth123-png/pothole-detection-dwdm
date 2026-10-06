@@ -56,6 +56,13 @@ def get_yolo_model(model_path: str = None):
         if model_path is None:
             best_pt = PROJECT_ROOT / "models" / "best.pt"
             pothole_pt = PROJECT_ROOT / "models" / "pothole_yolo.pt"
+            if not best_pt.exists() or best_pt.stat().st_size <= 5_000_000:
+                try:
+                    from setup_cloud import ensure_model
+                    ensure_model()
+                except Exception:
+                    pass
+
             if best_pt.exists() and best_pt.stat().st_size > 5_000_000:
                 model_path = str(best_pt)
             elif pothole_pt.exists():
@@ -98,6 +105,15 @@ class LiveDetectionHandler(BaseHTTPRequestHandler):
         self._set_cors_headers()
         self.end_headers()
 
+    def _send_json(self, status_code: int, data: dict):
+        body = json.dumps(data).encode("utf-8")
+        self.send_response(status_code)
+        self._set_cors_headers()
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Content-Length", str(len(body)))
+        self.end_headers()
+        self.wfile.write(body)
+
     def do_GET(self):
         if self.path in ("/api/health", "/api/status", "/health"):
             model = get_yolo_model()
@@ -110,15 +126,9 @@ class LiveDetectionHandler(BaseHTTPRequestHandler):
                 "rdd2022_class": "D40 Pothole",
                 "server_time": datetime.now().isoformat(),
             }
-            self.send_response(200)
-            self._set_cors_headers()
-            self.send_header("Content-Type", "application/json")
-            self.end_headers()
-            self.wfile.write(json.dumps(response).encode("utf-8"))
+            self._send_json(200, response)
         else:
-            self.send_response(404)
-            self._set_cors_headers()
-            self.end_headers()
+            self._send_json(404, {"error": "Not found"})
 
     def do_POST(self):
         if self.path == "/api/detect":
@@ -191,19 +201,11 @@ class LiveDetectionHandler(BaseHTTPRequestHandler):
                     "frame_dims": {"width": img_w, "height": img_h},
                 }
 
-                self.send_response(200)
-                self._set_cors_headers()
-                self.send_header("Content-Type", "application/json")
-                self.end_headers()
-                self.wfile.write(json.dumps(resp).encode("utf-8"))
+                self._send_json(200, resp)
 
             except Exception as e:
                 logger.error(f"Inference error in /api/detect: {e}")
-                self.send_response(500)
-                self._set_cors_headers()
-                self.send_header("Content-Type", "application/json")
-                self.end_headers()
-                self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode("utf-8"))
+                self._send_json(500, {"success": False, "error": str(e)})
 
         elif self.path == "/api/save":
             try:
@@ -238,23 +240,13 @@ class LiveDetectionHandler(BaseHTTPRequestHandler):
                 }
 
                 det_id = insert_detection(rec)
-                self.send_response(200)
-                self._set_cors_headers()
-                self.send_header("Content-Type", "application/json")
-                self.end_headers()
-                self.wfile.write(json.dumps({"success": True, "det_id": det_id}).encode("utf-8"))
+                self._send_json(200, {"success": True, "det_id": det_id})
 
             except Exception as e:
                 logger.error(f"Save error in /api/save: {e}")
-                self.send_response(500)
-                self._set_cors_headers()
-                self.send_header("Content-Type", "application/json")
-                self.end_headers()
-                self.wfile.write(json.dumps({"success": False, "error": str(e)}).encode("utf-8"))
+                self._send_json(500, {"success": False, "error": str(e)})
         else:
-            self.send_response(404)
-            self._set_cors_headers()
-            self.end_headers()
+            self._send_json(404, {"error": "Not found"})
 
 
 def start_live_server(port: int = _SERVER_PORT, host: str = "127.0.0.1") -> bool:
@@ -302,11 +294,13 @@ def ensure_live_server(port: int = _SERVER_PORT) -> bool:
 
 
 if __name__ == "__main__":
-    print(f"Starting Standalone Live YOLO Detection Server on http://127.0.0.1:{_SERVER_PORT}...")
-    server = ThreadedHTTPServer(("127.0.0.1", _SERVER_PORT), LiveDetectionHandler)
+    port = int(os.environ.get("PORT", _SERVER_PORT))
+    host = os.environ.get("HOST", "0.0.0.0")
+    print(f"Starting Standalone Live YOLO Detection Server on http://{host}:{port}...")
+    server = ThreadedHTTPServer((host, port), LiveDetectionHandler)
     # Warm up model
     get_yolo_model()
-    print(f"Ready. Listening for frames on http://127.0.0.1:{_SERVER_PORT}/api/detect")
+    print(f"Ready. Listening for frames on http://{host}:{port}/api/detect")
     try:
         server.serve_forever()
     except KeyboardInterrupt:
