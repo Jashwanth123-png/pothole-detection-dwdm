@@ -32,10 +32,23 @@ PROJECT_ROOT = Path(__file__).resolve().parent
 # 1. Model download
 # ---------------------------------------------------------------------------
 
+def _get_secret_or_env(key: str, default: str = "") -> str:
+    """Read a setting from st.secrets first, falling back to os.environ."""
+    try:
+        import streamlit as st
+        if hasattr(st, "secrets") and key in st.secrets:
+            val = str(st.secrets[key]).strip()
+            if val:
+                return val
+    except Exception:
+        pass
+    return os.environ.get(key, default).strip()
+
+
 def ensure_model() -> bool:
     """
     Ensure models/best.pt exists. If missing, attempt to download from
-    HuggingFace Hub using the HF_MODEL_REPO environment variable.
+    HuggingFace Hub using HF_MODEL_REPO from st.secrets or environment variable.
 
     Returns True if model is available (either already present or downloaded).
     Returns False if unavailable (will trigger demo mode in app.py, unchanged).
@@ -52,15 +65,16 @@ def ensure_model() -> bool:
         logger.info(f"Model already present: {best_pt} ({best_pt.stat().st_size/1e6:.1f} MB)")
         return True
 
-    # Try to download from HuggingFace Hub
-    hf_repo = os.environ.get("HF_MODEL_REPO", "").strip()
-    hf_file = os.environ.get("HF_MODEL_FILE", "best.pt").strip()
+    # Try to download from HuggingFace Hub (supports st.secrets and os.environ)
+    hf_repo = _get_secret_or_env("HF_MODEL_REPO")
+    hf_file = _get_secret_or_env("HF_MODEL_FILE", "best.pt")
+    hf_token = _get_secret_or_env("HF_TOKEN") or _get_secret_or_env("HUGGINGFACE_TOKEN") or None
 
     if not hf_repo:
         logger.warning(
-            "models/best.pt not found and HF_MODEL_REPO env var not set. "
-            "Running in demo mode. To enable real detection on cloud, set "
-            "HF_MODEL_REPO to your HuggingFace repo ID (e.g. 'username/repo')."
+            "models/best.pt not found and HF_MODEL_REPO not configured in st.secrets or env. "
+            "Running in demo mode. To enable real detection on cloud, add "
+            'HF_MODEL_REPO = "username/repo" to Streamlit secrets.'
         )
         return False
 
@@ -73,6 +87,7 @@ def ensure_model() -> bool:
             filename=hf_file,
             local_dir=str(models_dir),
             local_dir_use_symlinks=False,
+            token=hf_token,
         )
         # Move/copy to standard location if needed
         downloaded = Path(local_path)
