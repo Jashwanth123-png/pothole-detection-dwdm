@@ -25,6 +25,15 @@ import os
 # ── Make sure every sub-package is importable regardless of CWD ────────────
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
+# ── Cloud deployment setup (no-op on local) ─────────────────────────────────
+# Downloads models/best.pt from HuggingFace Hub if missing (cloud only).
+# Auto-seeds warehouse demo data if empty. Does NOT change any detection logic.
+try:
+    from setup_cloud import run_cloud_setup
+    run_cloud_setup()
+except Exception:
+    pass  # Never block app startup
+
 import streamlit as st
 import pandas as pd
 from datetime import date, datetime, timedelta

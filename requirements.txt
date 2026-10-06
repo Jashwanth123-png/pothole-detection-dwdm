@@ -3,10 +3,20 @@
 # Python 3.10+ required
 
 # Core ML / Computer Vision
-ultralytics>=8.0.0
+# NOTE: torch CPU-only index used to keep deployment size manageable.
+# Local GPU users: replace with torch>=2.0.0 from default index.
+--extra-index-url https://download.pytorch.org/whl/cpu
 torch>=2.0.0
 torchvision>=0.15.0
-opencv-python>=4.8.0
+
+ultralytics>=8.0.0
+
+# Use headless OpenCV on cloud (no libGL/display required).
+# Preserves identical API to opencv-python.
+opencv-python-headless>=4.8.0
+
+# Model hosting — downloads best.pt from HuggingFace Hub at startup
+huggingface_hub>=0.20.0
 
 # Data Processing
 pandas>=2.0.0

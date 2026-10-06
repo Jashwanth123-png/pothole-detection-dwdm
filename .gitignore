@@ -121,6 +121,14 @@ logs/
 # ────────────────────────────────────────────────────────────
 .streamlit/secrets.toml
 # Keep .streamlit/config.toml (non-secret, configures theme/port)
+!.streamlit/config.toml
+
+# ────────────────────────────────────────────────────────────
+# Deployment files — always commit these
+# ────────────────────────────────────────────────────────────
+!packages.txt
+!setup_cloud.py
+
 
 # ────────────────────────────────────────────────────────────
 # Pytest / Testing
